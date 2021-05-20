@@ -7,6 +7,7 @@ import (
 	"os"
     "encoding/xml"
 	"io"
+	"regexp"
 	
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -91,15 +92,18 @@ func echo(b *gotgbot.Bot, ctx *ext.Context) error {
 
 func SendTime(b *gotgbot.Bot, ctx *ext.Context) error {
 	loc, _ := time.LoadLocation("Asia/Hong_Kong")
-	ctx.EffectiveMessage.Reply(b, time.Now().In(loc).Format(time.RFC850), nil)
+	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
+		fmt.Sprintf("The time now is:\n<b>%s</b>", time.Now().In(loc).Format(time.RFC850)), 
+		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
+	err != nil {
+		fmt.Println("failed: " + err.Error())
+	}
 	cb := ctx.Update.CallbackQuery
 	cb.Answer(b, nil)
 	return nil
 }
 
-
 func GetWeather(b *gotgbot.Bot, ctx *ext.Context) error {
-	fmt.Println("In Weather")
 	resp, err := http.Get("https://rss.weather.gov.hk/rss/LocalWeatherForecast_uc.xml")
 	if err != nil {
 		fmt.Println("failed" + err.Error())
@@ -108,16 +112,27 @@ func GetWeather(b *gotgbot.Bot, ctx *ext.Context) error {
 	if err != nil {
 		fmt.Println("failed" + err.Error())
 	}
-	type Things struct {
-		String  string    `xml:"rss>channel>item>author"`
-		// String  string    `xml:"rss"`
+	type Content struct {
+		Title  			string    `xml:"channel>title"`
+		Subtitle  		string    `xml:"channel>item>title"`
+		Description  	string    `xml:"channel>item>description"`
 	}
-	var m Things
-	if err := xml.Unmarshal(body, &m); err != nil {
+	var report Content
+	if err := xml.Unmarshal([]byte(body), &report); err != nil {
 		fmt.Println(err)
 	}
-
-	fmt.Printf("%s", m.String)
-	ctx.EffectiveMessage.Reply(b, m.String, nil)
+	Ret := fmt.Sprintf("<b>%s</b>\n%s\n!!%s", report.Title, report.Subtitle, report.Description)
+	brRegex, err := regexp.Compile(`(<br/?>+\s+|<br/>)`)
+	spRegex, err := regexp.Compile(`!![\r\n\s]+`)
+	match := brRegex.ReplaceAllString(Ret, "\n")
+	match = spRegex.ReplaceAllString(match, "\n")
+	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
+		match, 
+		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
+	err != nil {
+		fmt.Println("failed: " + err.Error())
+	}
+	cb := ctx.Update.CallbackQuery
+	cb.Answer(b, nil)
 	return nil
 }
