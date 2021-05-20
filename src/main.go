@@ -58,11 +58,11 @@ func GenKeyboardLayout() [][]gotgbot.InlineKeyboardButton {
 		{Text: "Time", CallbackData: "time_callback"},
 		{Text: "Weather", CallbackData: "weather_callback"},
 		{Text: "Close", CallbackData: "close_callback"},
-	},{
+	}}/*,{
 		{Text: "Weather", CallbackData: "other_callback"},
 		{Text: "Weather", CallbackData: "other_callback"},
 		{Text: "Weather", CallbackData: "other_callback"},
-	}}
+	}*/
 }
 
 func Start(b *gotgbot.Bot, ctx *ext.Context) error {
