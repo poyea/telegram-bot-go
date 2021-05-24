@@ -5,7 +5,7 @@ import (
 	"time"
 	"net/http"
 	"os"
-    "encoding/xml"
+	"encoding/xml"
 	"io"
 	"regexp"
 	"strings"
@@ -192,11 +192,11 @@ func ReceiveStock(b *gotgbot.Bot, ctx *ext.Context) error {
 
 func MakeLine(items ...string) string {
 	var msg strings.Builder
-    for _, item := range items {
-        msg.WriteString(item)
+	for _, item := range items {
+		msg.WriteString(item)
 		msg.WriteString("   ")
-    }
-    return msg.String()
+	}
+	return msg.String()
 }
 
 func MakeStockChanges(price float64) string {
