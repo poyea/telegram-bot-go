@@ -48,7 +48,6 @@ func main() {
 	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("set_stock_callback"), SetStock))
 	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("get_stock_callback"), GetStock))
 	dispatcher.AddHandler(handlers.NewMessage(filters.Reply, ReceiveStock))
-	// dispatcher.AddHandler(handlers.NewMessage(filters.All, echo))
 
 	err = updater.StartPolling(b, &ext.PollingOpts{DropPendingUpdates: true})
 	if err != nil {
@@ -159,19 +158,21 @@ func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 
 func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 	iter := equity.List(stocks)
+	var msg strings.Builder
 	for iter.Next() {
 		q := iter.Equity()
-		fmt.Println(q)
+		msg.WriteString(MakeLine(q.Symbol, fmt.Sprint(q.RegularMarketPrice), MakeStockChanges(q.RegularMarketChangePercent)))
+		msg.WriteString("\n")
 	}
 	if iter.Err() != nil {
 		panic(iter.Err())
 	}
-	// if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
-	// 	q, 
-	// 	&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
-	// err != nil {
-	// 	fmt.Println("failed: " + err.Error())
-	// }
+	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
+		msg.String(), 
+		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
+	err != nil {
+		fmt.Println("failed: " + err.Error())
+	}
 	cb := ctx.Update.CallbackQuery
 	cb.Answer(b, nil)
 	return nil
@@ -186,7 +187,28 @@ func ReceiveStock(b *gotgbot.Bot, ctx *ext.Context) error {
 	err != nil {
 		fmt.Println("failed: " + err.Error())
 	}
-	cb := ctx.Update.CallbackQuery
-	cb.Answer(b, nil)
 	return nil
+}
+
+func MakeLine(items ...string) string {
+	var msg strings.Builder
+    for _, item := range items {
+        msg.WriteString(item)
+		msg.WriteString("   ")
+    }
+    return msg.String()
+}
+
+func MakeStockChanges(price float64) string {
+	var msg strings.Builder
+	if price > 0 {
+		msg.WriteString("+")
+	}
+	msg.WriteString(fmt.Sprintf("%.2f%%", price))
+	if price > 0 {
+		msg.WriteString("📈")
+	} else if price < 0 {
+		msg.WriteString("📉")
+	}
+	return msg.String()
 }
