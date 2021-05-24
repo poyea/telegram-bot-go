@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
-	"time"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var stocks = []string{"AAPL", "GOOG", "MSFT"}
@@ -58,7 +58,7 @@ func GenKeyboardLayout() [][]gotgbot.InlineKeyboardButton {
 		{Text: "Time", CallbackData: "time_callback"},
 		{Text: "Weather", CallbackData: "weather_callback"},
 		{Text: "Close", CallbackData: "close_callback"},
-	},{
+	}, {
 		{Text: "Set Stock", CallbackData: "set_stock_callback"},
 		{Text: "Get Stock", CallbackData: "get_stock_callback"},
 		{Text: "Close", CallbackData: "close_callback"},
@@ -92,10 +92,9 @@ func echo(b *gotgbot.Bot, ctx *ext.Context) error {
 
 func SendTime(b *gotgbot.Bot, ctx *ext.Context) error {
 	loc, _ := time.LoadLocation("Asia/Hong_Kong")
-	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
-		fmt.Sprintf("The time now is:\n<b>%s</b>", time.Now().In(loc).Format(time.RFC850)), 
-		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
-	err != nil {
+	if _, err := b.SendMessage(ctx.EffectiveChat.Id,
+		fmt.Sprintf("The time now is:\n<b>%s</b>", time.Now().In(loc).Format(time.RFC850)),
+		&gotgbot.SendMessageOpts{ParseMode: "html"}); err != nil {
 		fmt.Println("failed: " + err.Error())
 	}
 	cb := ctx.Update.CallbackQuery

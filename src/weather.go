@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
 	"encoding/xml"
+	"fmt"
 	"io"
+	"net/http"
 	"regexp"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
@@ -13,9 +13,9 @@ import (
 
 func GetWeather(b *gotgbot.Bot, ctx *ext.Context) error {
 	type Content struct {
-		Title  			string    `xml:"channel>title"`
-		Subtitle  		string    `xml:"channel>item>title"`
-		Description  	string    `xml:"channel>item>description"`
+		Title       string `xml:"channel>title"`
+		Subtitle    string `xml:"channel>item>title"`
+		Description string `xml:"channel>item>description"`
 	}
 
 	resp, err := http.Get("https://rss.weather.gov.hk/rss/LocalWeatherForecast_uc.xml")
@@ -35,10 +35,9 @@ func GetWeather(b *gotgbot.Bot, ctx *ext.Context) error {
 	spRegex, err := regexp.Compile(`!![\r\n\s]+`)
 	match := brRegex.ReplaceAllString(Ret, "\n")
 	match = spRegex.ReplaceAllString(match, "\n")
-	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
-		match, 
-		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
-	err != nil {
+	if _, err := b.SendMessage(ctx.EffectiveChat.Id,
+		match,
+		&gotgbot.SendMessageOpts{ParseMode: "html"}); err != nil {
 		fmt.Println("failed: " + err.Error())
 	}
 	cb := ctx.Update.CallbackQuery
