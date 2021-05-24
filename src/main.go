@@ -5,9 +5,6 @@ import (
 	"time"
 	"net/http"
 	"os"
-	"encoding/xml"
-	"io"
-	"regexp"
 	"strings"
 
 	"go.uber.org/zap"
@@ -16,7 +13,6 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters"
-	"github.com/piquette/finance-go/equity"
 )
 
 var stocks = []string{"AAPL", "GOOG", "MSFT"}
@@ -38,7 +34,6 @@ func main() {
 
 	updater := ext.NewUpdater(nil)
 	dispatcher := updater.Dispatcher
-	logger.Sugar().Infof("Server started")
 
 	dispatcher.AddHandler(handlers.NewCommand("start", Start))
 	dispatcher.AddHandler(handlers.NewCommand("keyboard", Start))
@@ -53,7 +48,7 @@ func main() {
 	if err != nil {
 		panic("failed to start polling: " + err.Error())
 	}
-	logger.Sugar().Infof("%s has been started...\n", b.User.Username)
+	logger.Sugar().Infof("@%s has been started...\n", b.User.Username)
 
 	updater.Idle()
 }
@@ -108,107 +103,11 @@ func SendTime(b *gotgbot.Bot, ctx *ext.Context) error {
 	return nil
 }
 
-func GetWeather(b *gotgbot.Bot, ctx *ext.Context) error {
-	type Content struct {
-		Title  			string    `xml:"channel>title"`
-		Subtitle  		string    `xml:"channel>item>title"`
-		Description  	string    `xml:"channel>item>description"`
-	}
-
-	resp, err := http.Get("https://rss.weather.gov.hk/rss/LocalWeatherForecast_uc.xml")
-	if err != nil {
-		fmt.Println("failed" + err.Error())
-	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("failed" + err.Error())
-	}
-	var report Content
-	if err := xml.Unmarshal([]byte(body), &report); err != nil {
-		fmt.Println(err)
-	}
-	Ret := fmt.Sprintf("<b>%s</b>\n%s\n!!%s", report.Title, report.Subtitle, report.Description)
-	brRegex, err := regexp.Compile(`(<br/?>+\s+|<br/>)`)
-	spRegex, err := regexp.Compile(`!![\r\n\s]+`)
-	match := brRegex.ReplaceAllString(Ret, "\n")
-	match = spRegex.ReplaceAllString(match, "\n")
-	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
-		match, 
-		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
-	err != nil {
-		fmt.Println("failed: " + err.Error())
-	}
-	cb := ctx.Update.CallbackQuery
-	cb.Answer(b, nil)
-	return nil
-}
-
-func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
-	query := "Please reply with stocks, space-separated, e.g.: \nAAPL GOOG MSFT"
-	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
-		query,
-		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
-	err != nil {
-		fmt.Println("failed: " + err.Error())
-	}
-	cb := ctx.Update.CallbackQuery
-	cb.Answer(b, nil)
-	return nil
-}
-
-func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
-	iter := equity.List(stocks)
-	var msg strings.Builder
-	for iter.Next() {
-		q := iter.Equity()
-		msg.WriteString(MakeLine(q.Symbol, fmt.Sprint(q.RegularMarketPrice), MakeStockChanges(q.RegularMarketChangePercent)))
-		msg.WriteString("\n")
-	}
-	if iter.Err() != nil {
-		panic(iter.Err())
-	}
-	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
-		msg.String(), 
-		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
-	err != nil {
-		fmt.Println("failed: " + err.Error())
-	}
-	cb := ctx.Update.CallbackQuery
-	cb.Answer(b, nil)
-	return nil
-}
-
-func ReceiveStock(b *gotgbot.Bot, ctx *ext.Context) error {
-	text := strings.Fields(strings.ToUpper(ctx.EffectiveMessage.Text))
-	stocks = text
-	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
-		"Done.", 
-		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
-	err != nil {
-		fmt.Println("failed: " + err.Error())
-	}
-	return nil
-}
-
 func MakeLine(items ...string) string {
 	var msg strings.Builder
 	for _, item := range items {
 		msg.WriteString(item)
 		msg.WriteString("   ")
-	}
-	return msg.String()
-}
-
-func MakeStockChanges(price float64) string {
-	var msg strings.Builder
-	if price > 0 {
-		msg.WriteString("+")
-	}
-	msg.WriteString(fmt.Sprintf("%.2f%%", price))
-	if price > 0 {
-		msg.WriteString("📈")
-	} else if price < 0 {
-		msg.WriteString("📉")
 	}
 	return msg.String()
 }
