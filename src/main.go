@@ -8,14 +8,18 @@ import (
     "encoding/xml"
 	"io"
 	"regexp"
-	
+	"strings"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters"
+	"github.com/piquette/finance-go/equity"
 )
+
+var stocks = []string{"AAPL", "GOOG", "MSFT"}
 
 func main() {
 	b, err := gotgbot.NewBot(os.Getenv("TOKEN"), &gotgbot.BotOpts{
@@ -38,11 +42,13 @@ func main() {
 
 	dispatcher.AddHandler(handlers.NewCommand("start", Start))
 	dispatcher.AddHandler(handlers.NewCommand("keyboard", Start))
-	dispatcher.AddHandler(handlers.NewCommand("else", other))
 	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("close_callback"), CloseKeyboard))
 	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("time_callback"), SendTime))
 	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("weather_callback"), GetWeather))
-	dispatcher.AddHandler(handlers.NewMessage(filters.All, echo))
+	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("set_stock_callback"), SetStock))
+	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("get_stock_callback"), GetStock))
+	dispatcher.AddHandler(handlers.NewMessage(filters.Reply, ReceiveStock))
+	// dispatcher.AddHandler(handlers.NewMessage(filters.All, echo))
 
 	err = updater.StartPolling(b, &ext.PollingOpts{DropPendingUpdates: true})
 	if err != nil {
@@ -59,9 +65,9 @@ func GenKeyboardLayout() [][]gotgbot.InlineKeyboardButton {
 		{Text: "Weather", CallbackData: "weather_callback"},
 		{Text: "Close", CallbackData: "close_callback"},
 	},{
-		{Text: "Weather", CallbackData: "other_callback"},
-		{Text: "Weather", CallbackData: "other_callback"},
-		{Text: "Weather", CallbackData: "other_callback"},
+		{Text: "Set Stock", CallbackData: "set_stock_callback"},
+		{Text: "Get Stock", CallbackData: "get_stock_callback"},
+		{Text: "Close", CallbackData: "close_callback"},
 	}}
 }
 
@@ -104,6 +110,12 @@ func SendTime(b *gotgbot.Bot, ctx *ext.Context) error {
 }
 
 func GetWeather(b *gotgbot.Bot, ctx *ext.Context) error {
+	type Content struct {
+		Title  			string    `xml:"channel>title"`
+		Subtitle  		string    `xml:"channel>item>title"`
+		Description  	string    `xml:"channel>item>description"`
+	}
+
 	resp, err := http.Get("https://rss.weather.gov.hk/rss/LocalWeatherForecast_uc.xml")
 	if err != nil {
 		fmt.Println("failed" + err.Error())
@@ -111,11 +123,6 @@ func GetWeather(b *gotgbot.Bot, ctx *ext.Context) error {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("failed" + err.Error())
-	}
-	type Content struct {
-		Title  			string    `xml:"channel>title"`
-		Subtitle  		string    `xml:"channel>item>title"`
-		Description  	string    `xml:"channel>item>description"`
 	}
 	var report Content
 	if err := xml.Unmarshal([]byte(body), &report); err != nil {
@@ -128,6 +135,53 @@ func GetWeather(b *gotgbot.Bot, ctx *ext.Context) error {
 	match = spRegex.ReplaceAllString(match, "\n")
 	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
 		match, 
+		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
+	err != nil {
+		fmt.Println("failed: " + err.Error())
+	}
+	cb := ctx.Update.CallbackQuery
+	cb.Answer(b, nil)
+	return nil
+}
+
+func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
+	query := "Please reply with stocks, space-separated, e.g.: \nAAPL GOOG MSFT"
+	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
+		query,
+		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
+	err != nil {
+		fmt.Println("failed: " + err.Error())
+	}
+	cb := ctx.Update.CallbackQuery
+	cb.Answer(b, nil)
+	return nil
+}
+
+func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
+	iter := equity.List(stocks)
+	for iter.Next() {
+		q := iter.Equity()
+		fmt.Println(q)
+	}
+	if iter.Err() != nil {
+		panic(iter.Err())
+	}
+	// if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
+	// 	q, 
+	// 	&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
+	// err != nil {
+	// 	fmt.Println("failed: " + err.Error())
+	// }
+	cb := ctx.Update.CallbackQuery
+	cb.Answer(b, nil)
+	return nil
+}
+
+func ReceiveStock(b *gotgbot.Bot, ctx *ext.Context) error {
+	text := strings.Fields(strings.ToUpper(ctx.EffectiveMessage.Text))
+	stocks = text
+	if _, err := b.SendMessage(ctx.EffectiveChat.Id, 
+		"Done.", 
 		&gotgbot.SendMessageOpts{ ParseMode: "html" }); 
 	err != nil {
 		fmt.Println("failed: " + err.Error())
