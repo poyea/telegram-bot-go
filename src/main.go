@@ -57,7 +57,6 @@ func GenKeyboardLayout() [][]gotgbot.InlineKeyboardButton {
 	return [][]gotgbot.InlineKeyboardButton{{
 		{Text: "Time", CallbackData: "time_callback"},
 		{Text: "Weather", CallbackData: "weather_callback"},
-		{Text: "Close", CallbackData: "close_callback"},
 	}, {
 		{Text: "Set Stock", CallbackData: "set_stock_callback"},
 		{Text: "Get Stock", CallbackData: "get_stock_callback"},
