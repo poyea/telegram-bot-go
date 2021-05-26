@@ -13,7 +13,7 @@ import (
 var stocks = []string{"AAPL", "GOOG", "MSFT"}
 
 func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
-	query := "Please reply with stocks, space-separated, e.g.: \nAAPL GOOG MSFT"
+	const query = "Please reply with stocks, space-separated, e.g.: \nAAPL GOOG MSFT"
 	if _, err := b.SendMessage(ctx.EffectiveChat.Id,
 		query,
 		&gotgbot.SendMessageOpts{ParseMode: "html"}); err != nil {
@@ -24,7 +24,7 @@ func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 	return nil
 }
 
-func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
+func GenerateStockMessage(stock []string) string {
 	iter := equity.List(stocks)
 	var msg strings.Builder
 	var t string
@@ -37,8 +37,13 @@ func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 	if iter.Err() != nil {
 		panic(iter.Err())
 	}
+	return t + msg.String()
+}
+
+func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
+	msg := GenerateStockMessage(stocks)
 	if _, err := b.SendMessage(ctx.EffectiveChat.Id,
-		t+msg.String(),
+		msg,
 		&gotgbot.SendMessageOpts{ParseMode: "html"}); err != nil {
 		fmt.Println("failed: " + err.Error())
 	}
