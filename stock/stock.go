@@ -79,9 +79,10 @@ func MakeStockChanges(price float64) string {
 
 func MakeLine(items ...string) string {
 	var msg strings.Builder
+	msg.WriteString("| ")
 	for _, item := range items {
 		msg.WriteString(item)
-		msg.WriteString("   ")
+		msg.WriteString(" | ")
 	}
 	return msg.String()
 }
