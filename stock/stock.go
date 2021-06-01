@@ -2,6 +2,7 @@ package stock
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -9,8 +10,6 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/piquette/finance-go/equity"
 )
-
-var stocks = []string{"AAPL", "GOOG", "MSFT"}
 
 func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 	const query = "Please reply with stocks, space-separated, e.g.: \nAAPL GOOG MSFT"
@@ -24,8 +23,12 @@ func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 	return nil
 }
 
-func GenerateStockMessage(stock []string) string {
-	iter := equity.List(stocks)
+func GenerateStockMessage() string {
+	data, err := ioutil.ReadFile("stock/stocks.txt")
+	if err != nil {
+		panic(err)
+	}
+	iter := equity.List(strings.Fields(string(data)))
 	var msg strings.Builder
 	var t string
 	for iter.Next() {
@@ -41,7 +44,7 @@ func GenerateStockMessage(stock []string) string {
 }
 
 func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
-	msg := GenerateStockMessage(stocks)
+	msg := GenerateStockMessage()
 	if _, err := b.SendMessage(ctx.EffectiveChat.Id,
 		msg,
 		&gotgbot.SendMessageOpts{ParseMode: "html"}); err != nil {
@@ -53,8 +56,10 @@ func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 }
 
 func ReceiveStock(b *gotgbot.Bot, ctx *ext.Context) error {
-	text := strings.Fields(strings.ToUpper(ctx.EffectiveMessage.Text))
-	stocks = text
+	text := []byte(strings.ToUpper(ctx.EffectiveMessage.Text))
+	if err := ioutil.WriteFile("stock/stocks.txt", text, 0644); err != nil {
+		panic(err)
+	}
 	if _, err := b.SendMessage(ctx.EffectiveChat.Id,
 		"Done.",
 		&gotgbot.SendMessageOpts{ParseMode: "html"}); err != nil {
