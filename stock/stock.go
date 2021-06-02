@@ -3,6 +3,7 @@ package stock
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -40,7 +41,11 @@ func GenerateStockMessage() string {
 	if iter.Err() != nil {
 		panic(iter.Err())
 	}
-	return t + msg.String()
+	ret := t + msg.String()
+	f, err := os.OpenFile("stock/stocks.log", os.O_APPEND|os.O_WRONLY, 0644)
+	_, err = f.WriteString(ret)
+	f.Close()
+	return ret
 }
 
 func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
