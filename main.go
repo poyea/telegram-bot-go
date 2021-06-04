@@ -7,6 +7,7 @@ import (
 	"time"
 
 	other "tg-helper/other"
+	random "tg-helper/random"
 	stock "tg-helper/stock"
 	weather "tg-helper/weather"
 
@@ -43,6 +44,7 @@ func main() {
 	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("weather_callback"), weather.GetWeather))
 	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("set_stock_callback"), stock.SetStock))
 	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("get_stock_callback"), stock.GetStock))
+	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("random_callback"), random.GetRandom))
 	dispatcher.AddHandler(handlers.NewCallback(filters.Equal("other_callback"), other.Other))
 	dispatcher.AddHandler(handlers.NewMessage(filters.Reply, stock.ReceiveStock))
 
@@ -59,6 +61,7 @@ func GenKeyboardLayout() [][]gotgbot.InlineKeyboardButton {
 	return [][]gotgbot.InlineKeyboardButton{{
 		{Text: "Time", CallbackData: "time_callback"},
 		{Text: "Weather", CallbackData: "weather_callback"},
+		{Text: "Random", CallbackData: "random_callback"},
 	}, {
 		{Text: "Set Stock", CallbackData: "set_stock_callback"},
 		{Text: "Get Stock", CallbackData: "get_stock_callback"},
