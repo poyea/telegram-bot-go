@@ -14,13 +14,9 @@ import (
 
 func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 	const query = "Please reply with stocks, space-separated, e.g.: \nAAPL GOOG MSFT"
-	if _, err := b.SendMessage(ctx.EffectiveChat.Id,
-		query,
-		&gotgbot.SendMessageOpts{ParseMode: "html"}); err != nil {
-		fmt.Println("failed: " + err.Error())
-	}
 	cb := ctx.Update.CallbackQuery
 	cb.Answer(b, nil)
+	cb.Message.EditText(b, query, nil)
 	return nil
 }
 
