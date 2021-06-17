@@ -3,6 +3,7 @@ package stock
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -37,11 +38,28 @@ func GenerateStockMessage() string {
 	if iter.Err() != nil {
 		panic(iter.Err())
 	}
-	ret := t + msg.String()
-	f, err := os.OpenFile("stock/stocks.log", os.O_APPEND|os.O_WRONLY, 0644)
-	_, err = f.WriteString(ret)
-	f.Close()
+	ret := t + msg.String() + "\n"
+	LogStockMessage(ret)
 	return ret
+}
+
+func LogStockMessage(msg string) {
+	const MAX_SIZE = 10000
+	f, err := os.OpenFile("stock/stocks.log", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fi, err := f.Stat()
+	if int(fi.Size()) > MAX_SIZE {
+		if err := os.Truncate("stock/stocks.log", 0); err != nil {
+			log.Printf("Failed to truncate: %v", err)
+		}
+	}
+	_, err = f.WriteString(msg)
+	if err != nil {
+		panic(err)
+	}
+	f.Close()
 }
 
 func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
