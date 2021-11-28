@@ -13,8 +13,15 @@ import (
 	"github.com/piquette/finance-go/equity"
 )
 
+var settingStocks = false
+
 func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
-	const query = "Please reply with stocks, space-separated, e.g.: \nAAPL GOOG MSFT"
+	data, err := ioutil.ReadFile("stock/stocks.txt")
+	if err != nil {
+		panic(err)
+	}
+	settingStocks = true
+	query := "Please reply with stocks, space-separated, e.g.: \n" + string(data)
 	cb := ctx.Update.CallbackQuery
 	cb.Answer(b, nil)
 	cb.Message.EditText(b, query, nil)
@@ -75,6 +82,14 @@ func GetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 }
 
 func ReceiveStock(b *gotgbot.Bot, ctx *ext.Context) error {
+	if !settingStocks {
+		if _, err := b.SendMessage(ctx.EffectiveChat.Id,
+			"You're not setting stocks!",
+			&gotgbot.SendMessageOpts{ParseMode: "html"}); err != nil {
+			fmt.Println("failed: " + err.Error())
+		}
+		return nil
+	}
 	text := []byte(strings.ToUpper(ctx.EffectiveMessage.Text))
 	if err := ioutil.WriteFile("stock/stocks.txt", text, 0644); err != nil {
 		panic(err)
@@ -84,6 +99,7 @@ func ReceiveStock(b *gotgbot.Bot, ctx *ext.Context) error {
 		&gotgbot.SendMessageOpts{ParseMode: "html"}); err != nil {
 		fmt.Println("failed: " + err.Error())
 	}
+	settingStocks = false
 	return nil
 }
 
