@@ -28,12 +28,24 @@ func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 	return nil
 }
 
+func Deduplicate(strSlice []string) []string {
+    keys := make(map[string]bool)
+    outputList := []string{}
+    for _, item := range strSlice {
+        if _, value := keys[item]; !value {
+            keys[item] = true
+            outputList = append(outputList, item)
+        }
+    }
+    return outputList
+}
+
 func GenerateStockMessage() string {
 	data, err := ioutil.ReadFile("stock/stocks.txt")
 	if err != nil {
 		panic(err)
 	}
-	iter := equity.List(strings.Fields(string(data)))
+	iter := equity.List(Deduplicate(strings.Fields(string(data))))
 	var msg strings.Builder
 	var t string
 	for iter.Next() {
