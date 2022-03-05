@@ -15,7 +15,7 @@ func gen_random_string(n int) string {
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
-		for i > 0 && b[i-1] == '_' && b[i] == '_' {
+		for (i > 0 && b[i-1] == '_' && b[i] == '_') || ((i == n-1 || i == 0) && b[i] == '_') {
 			b[i] = letters[rand.Intn(len(letters))]
 		}
 	}
