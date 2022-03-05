@@ -29,15 +29,15 @@ func SetStock(b *gotgbot.Bot, ctx *ext.Context) error {
 }
 
 func Deduplicate(strSlice []string) []string {
-    keys := make(map[string]bool)
-    outputList := []string{}
-    for _, item := range strSlice {
-        if _, value := keys[item]; !value {
-            keys[item] = true
-            outputList = append(outputList, item)
-        }
-    }
-    return outputList
+	keys := make(map[string]bool)
+	outputList := []string{}
+	for _, item := range strSlice {
+		if _, value := keys[item]; !value {
+			keys[item] = true
+			outputList = append(outputList, item)
+		}
+	}
+	return outputList
 }
 
 func GenerateStockMessage() string {
