@@ -2,12 +2,26 @@
 
 # telegram-bot-go
 
-Fired up and ready to serve. Beep Boop Beep. WALL-E.
+Fired up and ready to serve.
+Beep Boop Beep.
+WALL-E.
 
-## To build the project
+## Set your Telegram token
+You may refer to https://core.telegram.org/bots.
+```console
+$ export TOKEN=<your_telegram_token>
+```
 
-```command
-$ go build
+## To build the bot
+```console
+$ go build -o build/tg-helper
+$ build/tg-helper
+```
+
+## To run the bot
+Alternatively,
+```console
+$ go run main.go
 ```
 
 ## If you like this, please
