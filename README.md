@@ -2,11 +2,11 @@
 
 # telegram-bot-go [![Go](https://github.com/poyea/telegram-bot-go/actions/workflows/go.yml/badge.svg)](https://github.com/poyea/telegram-bot-go/actions/workflows/go.yml)
 
-Fired up and ready to serve.
-
+```bash
+      Fired up and ready to serve.
 Beep Boop Beep.
-
-WALL-E.
+    WALL-E.
+```
 
 ## Set your Telegram token
 You may refer to https://core.telegram.org/bots.
