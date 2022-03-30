@@ -8,6 +8,12 @@ Beep Boop Beep.
     WALL-E.
 ```
 
+## 🐳
+```console
+# docker build . -t telegram-bot
+# docker run --restart=always -d -i -e TOKEN='<your_telegram_token>' --name telegram-bot-live telegram-bot
+```
+
 ## Set your Telegram token
 You may refer to https://core.telegram.org/bots.
 ```console
