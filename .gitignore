@@ -17,4 +17,5 @@
 .env
 stock/stocks.log
 
-build
+build/
+

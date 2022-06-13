@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	other "tg-helper/other"
-	random "tg-helper/random"
-	stock "tg-helper/stock"
-	weather "tg-helper/weather"
+	"github.com/poyea/telegram-bot-go/other"
+	"github.com/poyea/telegram-bot-go/random"
+	"github.com/poyea/telegram-bot-go/stock"
+	"github.com/poyea/telegram-bot-go/weather"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
